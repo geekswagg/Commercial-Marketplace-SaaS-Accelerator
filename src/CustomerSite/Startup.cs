@@ -2,6 +2,7 @@
 // Licensed under the MIT License. See LICENSE file in the project root for license information.
 
 using Azure.Identity;
+using Marketplace.SaaS.Accelerator.CustomerSite.Controllers;
 using Marketplace.SaaS.Accelerator.CustomerSite.WebHook;
 using Marketplace.SaaS.Accelerator.DataAccess.Context;
 using Marketplace.SaaS.Accelerator.DataAccess.Contracts;
@@ -17,6 +18,7 @@ using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -65,7 +67,8 @@ public class Startup
             AdAuthenticationEndPoint = this.Configuration["SaaSApiConfiguration:AdAuthenticationEndPoint"],
             ClientId = this.Configuration["SaaSApiConfiguration:ClientId"],
             ClientSecret = this.Configuration["SaaSApiConfiguration:ClientSecret"],
-            MTClientId = this.Configuration["SaaSApiConfiguration:MTClientId"],
+            MTClientIdAdmin = this.Configuration["SaaSApiConfiguration:MTClientIdAdmin"],
+            MTClientIdPortal = this.Configuration["SaaSApiConfiguration:MTClientIdPortal"],
             FulFillmentAPIBaseURL = this.Configuration["SaaSApiConfiguration:FulFillmentAPIBaseURL"],
             FulFillmentAPIVersion = this.Configuration["SaaSApiConfiguration:FulFillmentAPIVersion"],
             GrantType = this.Configuration["SaaSApiConfiguration:GrantType"],
@@ -84,22 +87,26 @@ public class Startup
                 options.DefaultSignInScheme = CookieAuthenticationDefaults.AuthenticationScheme;
                 options.DefaultChallengeScheme = CookieAuthenticationDefaults.AuthenticationScheme;
             })
-            .AddCookie()
+            .AddCookie(options =>
+            {
+                options.ExpireTimeSpan = TimeSpan.FromMinutes(60);
+                options.Cookie.MaxAge = options.ExpireTimeSpan;
+                options.SlidingExpiration = true;
+            })
             .AddOpenIdConnect(options =>
             {
                 options.Authority = $"{config.AdAuthenticationEndPoint}/common/v2.0";
-                options.ClientId = config.MTClientId;
+                options.ClientId = config.MTClientIdPortal;
                 options.ResponseType = OpenIdConnectResponseType.IdToken;
                 options.CallbackPath = "/Home/Index";
                 options.SignedOutRedirectUri = config.SignedOutRedirectUri;
-                options.TokenValidationParameters.NameClaimType = ClaimConstants.CLAIM_NAME; //This does not seem to take effect on User.Identity. See Note in CustomClaimsTransformation.cs
+                options.TokenValidationParameters.NameClaimType = ClaimConstants.CLAIM_SHORT_NAME;
                 options.TokenValidationParameters.ValidateIssuer = false;
             });
         services
             .AddTransient<IClaimsTransformation, CustomClaimsTransformation>()
             .AddScoped<ExceptionHandlerAttribute>()
-            .AddScoped<RequestLoggerActionFilter>()
-        ;
+            .AddScoped<RequestLoggerActionFilter>();
 
         if (!Uri.TryCreate(config.FulFillmentAPIBaseURL, UriKind.Absolute, out var fulfillmentBaseApi)) 
         {
@@ -108,14 +115,18 @@ public class Startup
 
         services
             .AddSingleton<IFulfillmentApiService>(new FulfillmentApiService(new MarketplaceSaaSClient(fulfillmentBaseApi, creds), config, new FulfillmentApiClientLogger()))
-            .AddSingleton<SaaSApiClientConfiguration>(config);
+            .AddSingleton<SaaSApiClientConfiguration>(config)
+            .AddSingleton<ValidateJwtToken>();
 
         services
             .AddDbContext<SaasKitContext>(options => options.UseSqlServer(this.Configuration.GetConnectionString("DefaultConnection")));
 
         InitializeRepositoryServices(services);
 
-        services.AddMvc(option => option.EnableEndpointRouting = false);
+        services.AddMvc(option => {
+            option.EnableEndpointRouting = false;
+            option.Filters.Add(new AutoValidateAntiforgeryTokenAttribute());
+        });
     }
 
     /// <summary>
@@ -164,5 +175,7 @@ public class Startup
         services.AddScoped<IPlanEventsMappingRepository, PlanEventsMappingRepository>();
         services.AddScoped<IEventsRepository, EventsRepository>();
         services.AddScoped<IEmailService, SMTPEmailService>();
+        services.AddScoped<SaaSClientLogger<HomeController>>();
+        services.AddScoped<IWebNotificationService, WebNotificationService>();
     }
 }

@@ -37,7 +37,15 @@ public class SaaSApiClientConfiguration
     /// <value>
     /// The resource.
     /// </value>
-    public string MTClientId { get; set; }
+    public string MTClientIdAdmin { get; set; }
+
+    /// <summary>
+    /// Gets or sets the AAD Client ID resource.
+    /// </summary>
+    /// <value>
+    /// The resource.
+    /// </value>
+    public string MTClientIdPortal { get; set; }
 
     /// <summary>
     /// Gets or sets the resource.
@@ -95,14 +103,6 @@ public class SaaSApiClientConfiguration
     /// The saas application URL.
     /// </value>
     public string SaaSAppUrl { get; set; }
-
-    /// <summary>
-    /// Gets or sets the saas metered billing support.
-    /// </summary>
-    /// <value>
-    /// True or false.
-    /// </value>
-    public bool SupportMeteredBilling { get; set; }
 
     /// <summary>
     /// Initializes or Gets the current run environment. Set to "development" or "production" is assumed.

@@ -3,6 +3,7 @@
 
 using System;
 using Azure.Identity;
+using Marketplace.SaaS.Accelerator.AdminSite.Controllers;
 using Marketplace.SaaS.Accelerator.DataAccess.Context;
 using Marketplace.SaaS.Accelerator.DataAccess.Contracts;
 using Marketplace.SaaS.Accelerator.DataAccess.Services;
@@ -70,14 +71,14 @@ public class Startup
             ClientId = this.Configuration["SaaSApiConfiguration:ClientId"] ?? Guid.Empty.ToString(),
             ClientSecret = this.Configuration["SaaSApiConfiguration:ClientSecret"] ?? String.Empty,
             FulFillmentAPIBaseURL = this.Configuration["SaaSApiConfiguration:FulFillmentAPIBaseURL"],
-            MTClientId = this.Configuration["SaaSApiConfiguration:MTClientId"] ?? Guid.Empty.ToString(),
+            MTClientIdAdmin = this.Configuration["SaaSApiConfiguration:MTClientIdAdmin"] ?? Guid.Empty.ToString(),
+            MTClientIdPortal = this.Configuration["SaaSApiConfiguration:MTClientIdPortal"] ?? Guid.Empty.ToString(),
             FulFillmentAPIVersion = this.Configuration["SaaSApiConfiguration:FulFillmentAPIVersion"],
             GrantType = this.Configuration["SaaSApiConfiguration:GrantType"],
             Resource = this.Configuration["SaaSApiConfiguration:Resource"],
             SaaSAppUrl = this.Configuration["SaaSApiConfiguration:SaaSAppUrl"],
             SignedOutRedirectUri = this.Configuration["SaaSApiConfiguration:SignedOutRedirectUri"],
-            TenantId = this.Configuration["SaaSApiConfiguration:TenantId"] ?? Guid.Empty.ToString(),
-            SupportMeteredBilling = Convert.ToBoolean(this.Configuration["SaaSApiConfiguration:supportmeteredbilling"])
+            TenantId = this.Configuration["SaaSApiConfiguration:TenantId"] ?? Guid.Empty.ToString()
         };
         var knownUsers = new KnownUsersModel()
         {
@@ -96,14 +97,19 @@ public class Startup
             .AddOpenIdConnect(options =>
             {
                 options.Authority = $"{config.AdAuthenticationEndPoint}/common/v2.0";
-                options.ClientId = config.MTClientId;
+                options.ClientId = config.MTClientIdAdmin;
                 options.ResponseType = OpenIdConnectResponseType.IdToken;
                 options.CallbackPath = "/Home/Index";
                 options.SignedOutRedirectUri = config.SignedOutRedirectUri;
-                options.TokenValidationParameters.NameClaimType = "name";
+                options.TokenValidationParameters.NameClaimType = ClaimConstants.CLAIM_SHORT_NAME;
                 options.TokenValidationParameters.ValidateIssuer = false;
             })
-            .AddCookie();
+            .AddCookie(options =>
+            {
+                options.ExpireTimeSpan = TimeSpan.FromMinutes(60);
+                options.Cookie.MaxAge = options.ExpireTimeSpan;
+                options.SlidingExpiration = true;
+            });
 
         services
             .AddTransient<IClaimsTransformation, CustomClaimsTransformation>()
@@ -118,9 +124,12 @@ public class Startup
 
         services
             .AddSingleton<IFulfillmentApiService>(new FulfillmentApiService(new MarketplaceSaaSClient(fulfillmentBaseApi, creds), config, new FulfillmentApiClientLogger()))
-            .AddSingleton<IMeteredBillingApiService>(new MeteredBillingApiService(new MarketplaceMeteringClient(creds), config, new MeteringApiClientLogger()))
+            .AddSingleton<IMeteredBillingApiService>(new MeteredBillingApiService(new MarketplaceMeteringClient(creds), config, new SaaSClientLogger<MeteredBillingApiService>()))
             .AddSingleton<SaaSApiClientConfiguration>(config)
             .AddSingleton<KnownUsersModel>(knownUsers);
+            
+
+
 
         services
             .AddScoped<ApplicationConfigService>()
@@ -140,7 +149,10 @@ public class Startup
             options.Cookie.IsEssential = true;
         });
 
-        services.AddMvc(option => option.EnableEndpointRouting = false);
+        services.AddMvc(option => {
+            option.EnableEndpointRouting = false;
+            option.Filters.Add(new AutoValidateAntiforgeryTokenAttribute());
+        });
         services.AddControllersWithViews();
 
         services.Configure<CookieTempDataProviderOptions>(options =>
@@ -207,5 +219,12 @@ public class Startup
         services.AddScoped<ISchedulerFrequencyRepository, SchedulerFrequencyRepository>();
         services.AddScoped<IMeteredPlanSchedulerManagementRepository, MeteredPlanSchedulerManagementRepository>();
         services.AddScoped<ISchedulerManagerViewRepository, SchedulerManagerViewRepository>();
+        services.AddScoped<SaaSClientLogger<HomeController>>();
+        services.AddScoped<SaaSClientLogger<PlansController>>();
+        services.AddScoped<SaaSClientLogger<OffersController>>();
+        services.AddScoped<SaaSClientLogger<KnownUsersController>>();
+        services.AddScoped<SaaSClientLogger<ApplicationLogController>>();
+        services.AddScoped<SaaSClientLogger<ApplicationConfigController>>();
+        services.AddScoped<SaaSClientLogger<SchedulerController>>();
     }
 }

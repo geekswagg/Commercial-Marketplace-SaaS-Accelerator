@@ -2,14 +2,13 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text.Json;
 using Marketplace.SaaS.Accelerator.DataAccess.Contracts;
 using Marketplace.SaaS.Accelerator.DataAccess.Entities;
+using Marketplace.SaaS.Accelerator.Services.Helpers;
 using Marketplace.SaaS.Accelerator.Services.Services;
 using Marketplace.SaaS.Accelerator.Services.Utilities;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
 
 namespace Marketplace.SaaS.Accelerator.AdminSite.Controllers;
 
@@ -21,8 +20,7 @@ namespace Marketplace.SaaS.Accelerator.AdminSite.Controllers;
 [ServiceFilter(typeof(RequestLoggerActionFilter))]
 public class ApplicationConfigController : BaseController
 {
-    private readonly ILogger<ApplicationConfigController> logger;
-
+    private readonly SaaSClientLogger<ApplicationConfigController> logger;
     private readonly ApplicationConfigService appConfigService;
 
     /// <summary>
@@ -30,12 +28,9 @@ public class ApplicationConfigController : BaseController
     /// </summary>
     private readonly IEmailTemplateRepository emailTemplateRepository;
 
-    public ApplicationConfigController(
-        ApplicationConfigService appConfigService, 
-        ILogger<ApplicationConfigController> logger, 
-        IEmailTemplateRepository emailTemplateRepository)
+    public ApplicationConfigController(IApplicationConfigRepository applicationConfigRepository,IEmailTemplateRepository emailTemplateRepository, SaaSClientLogger<ApplicationConfigController> logger) : base(applicationConfigRepository)
     {
-        this.appConfigService = appConfigService;
+        this.appConfigService = new ApplicationConfigService(applicationConfigRepository);
         this.emailTemplateRepository = emailTemplateRepository;
         this.logger = logger;
     }
@@ -120,6 +115,14 @@ public class ApplicationConfigController : BaseController
     [ValidateAntiForgeryToken]
     public IActionResult ApplicationConfigDetails(ApplicationConfiguration appConfig)
     {
+        appConfig.Value = appConfig.Value ?? string.Empty;
+        
+        //check with the config is webhnotifcation url then validate if its proper url
+        if (appConfig.Name == StringLiteralConstants.WebNotificationUrl && !UrlValidator.IsValidUrlHttps(appConfig.Value))
+        {
+            return this.BadRequest("Invalid URL, only https and port 443 are allowed.");
+        }
+
         this.appConfigService.SaveAppConfig(appConfig);
 
         this.ModelState.Clear();
@@ -197,5 +200,7 @@ public class ApplicationConfigController : BaseController
 
         return RedirectToAction("Index");
     }
+
+
 
 }

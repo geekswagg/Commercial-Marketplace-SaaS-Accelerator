@@ -59,7 +59,7 @@ public class SchedulerUsageViewModel
     /// <value>
     /// The quantity.
     /// </value>
-    public int Quantity { get; set; }
+    public double Quantity { get; set; }
 
     /// <summary>
     /// Get or set First Run Time
@@ -81,4 +81,11 @@ public class SchedulerUsageViewModel
     /// 
     public List<MeteredAuditLogs> MeteredAuditLogs { get; set; }
 
+    /// <summary>
+    /// Gets or sets the user's timezone offset compared to UTC
+    /// </summary>
+    /// <value>
+    /// The user's timezone offset.
+    /// </value>
+    public int TimezoneOffset { get; set; }
 }

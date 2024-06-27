@@ -12,6 +12,7 @@
 - [Prerequisites](#prerequisites)
 - [Contributing](#contributing)
 - [Developers](#developers)
+- [FAQs](#faqs)
 - [License](#license)
 
 ---
@@ -20,21 +21,33 @@
 
 ---
 
+
+
+## Introduction
+
+The SaaS Accelerator is a production-ready solution designed to make it easier for Microsoft partners to sell their SaaS solutions via Microsoft Commercial Marketplace. Microsoft partners can use SaaS Accelerator to simplify the process of bringing their SaaS solutions to the Marketplace. It is a ready-to-use, community-supported solution providing the following capabilities:
+
+🚀 Quick & Easy Deployment: Go live in under 15 minutes with our low-code, production-ready solution.
+
+🔧 Turnkey Solution: Meets all technical prerequisites for your SaaS offers.
+
+💼 Subscriptions Simplified: A streamlined interface to optimize your subscription workflow.
+
+💲 Flexible Billing: Advanced capabilities for custom billing and pricing models.
+
+🛠️ Stay in Control: A dedicated adminstrative portal for managing all your customer subscriptions.
+
+Transform your SaaS game. Leverage SaaS Accelerator now!
+
+## Description
+
+The project is implemented in .NET and uses the commercial marketplace billing system, including the [SaaS Fulfillment API (v2)](https://docs.microsoft.com/en-us/azure/marketplace/partner-center-portal/pc-saas-fulfillment-api-v2) and [Marketplace Metering Service API](https://docs.microsoft.com/en-us/azure/marketplace/partner-center-portal/marketplace-metering-service-apis). The SaaS Accelerator models how a typical SaaS platform interacts with the marketplace APIs to provision subscriptions for customers, enable logging, and manage commercial marketplace subscriptions. The SaaS Accelerator may be installed as-is or may be customized to support your requirements. 
+
 ## Stay current with the latest updates!
 
 The SaaS Accelerator project team releases regularly releases new versions. Please see the [release notes page](https://github.com/Azure/Commercial-Marketplace-SaaS-Accelerator/releases) for updates. We recommend keeping up to date with latest releases to stay current on security patches, bug fixes, and new features.
 
 To update your SaaS Accelerator installation, use the **Update script** [documented here](./docs/Installation-Instructions.md#update-to-a-newer-version-of-the-saas-accelerator).
-
-## Introduction
-
-This project is a community-supported reference implementation for integrating Software-as-a-Service (SaaS) solutions with Microsoft commercial marketplace SaaS offers. The SaaS Accelerator may be installed as-is or may be customized to support your requirements. The project provides the following capabilities.
-
-1. A configurable landing page for SaaS customers
-2. A webhook that listens for subscription changes
-3. A private portal for the publisher to monitor customer subscriptions
-
-The project is implemented in .NET and uses the commercial marketplace billing system, including the [SaaS Fulfillment API (v2)](https://docs.microsoft.com/en-us/azure/marketplace/partner-center-portal/pc-saas-fulfillment-api-v2) and [Marketplace Metering Service API](https://docs.microsoft.com/en-us/azure/marketplace/partner-center-portal/marketplace-metering-service-apis). The SaaS Accelerator models how a typical SaaS platform interacts with the marketplace APIs to provision subscriptions for customers, enable logging, and manage commercial marketplace subscriptions.
 
 ## Intended Use
 
@@ -50,7 +63,9 @@ This project accelerates the SaaS offer onboarding experience for those building
 
 **[Advanced Installation instructions are here](./docs/Advanced-Instructions.md)**. These are detailed instructions to address different deployment scenarios such as how-to run it locally or deploy it from Visual Studio.
 
-**Video instructions:** Additionally, there is a quick video on the installation process. [Installing the SaaS Accelerator with the Azure portal cloud shell](https://go.microsoft.com/fwlink/?linkid=2196326) available through [Mastering the Marketplace](https://microsoft.github.io/Mastering-the-Marketplace).
+**Video instructions** Additionally, there is a quick video on the installation process. [Installing the SaaS Accelerator with the Azure portal cloud shell](https://go.microsoft.com/fwlink/?linkid=2196326) available through [Mastering the Marketplace](https://microsoft.github.io/Mastering-the-Marketplace).
+
+**[Upgrade to newer version](./docs/Installation-Instructions.md#update-to-a-newer-version-of-the-saas-accelerator)** Follow these instructions to move your 6.x release to the current version.
 
 ### Additional technical documents
 
@@ -65,8 +80,8 @@ This project accelerates the SaaS offer onboarding experience for those building
 The following documents provide how-tos for setting up Azure Monitoring and Alerting for the resources deployed by the SaaS Accelerator:
 
 - [Web App Monitoring and Alerting instructions](./docs/WebApp-Monitoring.md)
-- [SQL Server Monitoring and Alerting instructions](./docs/WebApp-Monitoring.md)
-- [App Registration Credentials Monitoring and Alerting instructions](./docs/WebApp-Monitoring.md)
+- [SQL Server Monitoring and Alerting instructions](./docs/SQL-Server-Monitoring.md)
+- [App Registration Credentials Monitoring and Alerting instructions](./docs/App-Reg-Monitoring.md)
 
 ## Commercial Marketplace Documentation
 
@@ -109,7 +124,7 @@ This project has been developed using the following technologies and versions:
 
 ## Security
 
-The accelerator code has been scanned for vulnerabilities and use secure configurations. Versions have been reviewed to ensure compatibility with the latest security guidelines.
+The accelerator code has been scanned for vulnerabilities and use secure configurations. Versions have been reviewed to ensure compatibility with the latest security guidelines. To enhance the best practices please see [Security best practices](./docs/Security-Best-Practices.md).
 
 ## Prerequisites
 
@@ -138,6 +153,10 @@ contact [opencode@microsoft.com](mailto:opencode@microsoft.com) with any additio
 ## Developers
 
 Code contributed should follow the C# specifications and best practices as documented [here](https://docs.microsoft.com/en-us/dotnet/csharp/programming-guide/inside-a-program/coding-conventions).
+
+## FAQs
+
+There is a list of the Frequent Asked Questions [here](./docs/FAQs.md).
 
 ## License
 

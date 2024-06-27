@@ -1,5 +1,6 @@
 ﻿using System;
 using Marketplace.SaaS.Accelerator.DataAccess.Contracts;
+using Marketplace.SaaS.Accelerator.Services.Exceptions;
 using Marketplace.SaaS.Accelerator.Services.Models;
 
 namespace Marketplace.SaaS.Accelerator.Services.Helpers;
@@ -53,7 +54,6 @@ public class EmailHelper
     /// Error while sending an email, please check the configuration.</exception>
     public EmailContentModel PrepareEmailContent(Guid subscriptionID, Guid planGuId, string processStatus, string planEventName, string subscriptionStatus)
     {
-        EmailContentModel emailContent = new EmailContentModel();
         string body = this.emailTemplateRepository.GetEmailBodyForSubscription(subscriptionID, processStatus);
         var subscriptionEvent = this.eventsRepository.GetByName(planEventName);
         var emailTemplateData = this.emailTemplateRepository.GetTemplateForStatus(subscriptionStatus);
@@ -63,36 +63,22 @@ public class EmailHelper
         }
 
         string subject = string.Empty;
-
         bool copyToCustomer = false;
-        bool isActive = false;
         string toReceipents = string.Empty;
         string ccReceipents = string.Empty;
         string bccReceipents = string.Empty;
 
-        string fromMail = this.applicationConfigRepository.GetValueByName("SMTPFromEmail");
-        string password = this.applicationConfigRepository.GetValueByName("SMTPPassword");
-        string username = this.applicationConfigRepository.GetValueByName("SMTPUserName");
-        bool smtpSsl = bool.Parse(this.applicationConfigRepository.GetValueByName("SMTPSslEnabled"));
-        int port = int.Parse(this.applicationConfigRepository.GetValueByName("SMTPPort"));
-        string smtpHost = this.applicationConfigRepository.GetValueByName("SMTPHost");
-
         var eventData = this.planEventsMappingRepository.GetPlanEvent(planGuId, subscriptionEvent.EventsId);
 
-        if (eventData != null)
-        {
-            toReceipents = eventData.SuccessStateEmails;
-            copyToCustomer = Convert.ToBoolean(eventData.CopyToCustomer);
-        }
-
-        if (string.IsNullOrEmpty(toReceipents))
-        {
-            throw new Exception(" Error while sending an email, please check the configuration. ");
-        }
-
+        //First add To, Cc, Bcc email addresses from email template
         if (emailTemplateData != null)
         {
-            if (!string.IsNullOrEmpty(toReceipents) && !string.IsNullOrEmpty(emailTemplateData.Cc))
+            if (!string.IsNullOrEmpty(emailTemplateData.ToRecipients))
+            {
+                toReceipents = emailTemplateData.ToRecipients;
+            }
+
+            if (!string.IsNullOrEmpty(emailTemplateData.Cc))
             {
                 ccReceipents = emailTemplateData.Cc;
             }
@@ -105,20 +91,67 @@ public class EmailHelper
             subject = emailTemplateData.Subject;
         }
 
-        emailContent.BCCEmails = bccReceipents;
-        emailContent.CCEmails = ccReceipents;
-        emailContent.ToEmails = toReceipents;
-        emailContent.Body = body;
-        emailContent.Subject = subject;
-        emailContent.CopyToCustomer = copyToCustomer;
-        emailContent.IsActive = isActive;
-        emailContent.FromEmail = fromMail;
-        emailContent.Password = password;
-        emailContent.SSL = smtpSsl;
-        emailContent.UserName = username;
-        emailContent.Port = port;
-        emailContent.SMTPHost = smtpHost;
+        //If the plan event data contains plan specific ToEmailAddress then override the above
+        if (eventData != null)
+        {
+            if (!string.IsNullOrEmpty(eventData.SuccessStateEmails))
+            {
+                toReceipents = eventData.SuccessStateEmails;
+            }
 
+            copyToCustomer = Convert.ToBoolean(eventData.CopyToCustomer);
+        }
+
+        if (string.IsNullOrEmpty(toReceipents))
+        {
+            throw new Exception(" Error while sending an email, please check the configuration. To email empty");
+        }
+
+        return FinalizeContentEmail(subject, body, ccReceipents, bccReceipents, toReceipents, copyToCustomer);
+        
+    }
+    /// <summary>
+    /// Prepares the content of the scheduler email.
+    /// </summary>
+    /// <param name="subscriptionName">The subscription Name.</param>
+    /// <param name="schedulerTaskName">scheduler Task Name.</param>
+    /// <param name="responseJson">response Json.</param>
+    /// <param name="subscriptionStatus">The subscription status.</param>
+    /// <returns>
+    /// Email Content Model.
+    /// </returns>
+    /// <exception cref="Exception">Error while sending an email, please check the configuration.
+    /// or
+    /// Error while sending an email, please check the configuration.</exception>
+    public EmailContentModel PrepareMeteredEmailContent(string schedulerTaskName, String subscriptionName, string subscriptionStatus, string responseJson)
+    {
+        var emailTemplateData = this.emailTemplateRepository.GetTemplateForStatus(subscriptionStatus);
+        string toReceipents = this.applicationConfigRepository.GetValueByName("SchedulerEmailTo");
+        if (string.IsNullOrEmpty(toReceipents))
+        {
+            throw new Exception(" Error while sending an email, please check the configuration. ");
+        }
+        var body = emailTemplateData.TemplateBody.Replace("****SubscriptionName****", subscriptionName).Replace("****SchedulerTaskName****", schedulerTaskName).Replace("****ResponseJson****", responseJson); ;
+        return FinalizeContentEmail(emailTemplateData.Subject,body, string.Empty, string.Empty, toReceipents, false);
+    }
+    private EmailContentModel FinalizeContentEmail(string subject, string body, string ccEmails,string bcEmails, string toEmails, bool copyToCustomer)
+    {
+        EmailContentModel emailContent = new EmailContentModel();
+        emailContent.BCCEmails = bcEmails;
+        emailContent.CCEmails = ccEmails;
+        emailContent.ToEmails = toEmails;
+        emailContent.IsActive = false;
+        emailContent.Subject = subject;
+        emailContent.Body = body;
+        emailContent.CopyToCustomer = copyToCustomer;
+        emailContent.FromEmail = this.applicationConfigRepository.GetValueByName("SMTPFromEmail");
+        emailContent.Password = this.applicationConfigRepository.GetValueByName("SMTPPassword");
+        emailContent.SSL = bool.TryParse(this.applicationConfigRepository.GetValueByName("SMTPSslEnabled"), out bool smtpssl) ? smtpssl : throw new MarketplaceException("Invalid settings : SMTP SSL");
+        emailContent.UserName = this.applicationConfigRepository.GetValueByName("SMTPUserName");
+        emailContent.Port = int.TryParse(this.applicationConfigRepository.GetValueByName("SMTPPort"), out int smtpport) ? smtpport : throw new MarketplaceException("Invalid settings : SMTP Port");
+        emailContent.SMTPHost = this.applicationConfigRepository.GetValueByName("SMTPHost");
         return emailContent;
     }
+
+
 }

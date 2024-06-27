@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Web;
 using Marketplace.SaaS.Accelerator.DataAccess.Contracts;
 using Marketplace.SaaS.Accelerator.DataAccess.Entities;
+using Marketplace.SaaS.Accelerator.DataAccess.Services;
 using Marketplace.SaaS.Accelerator.Services.Utilities;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
@@ -15,7 +17,7 @@ namespace Marketplace.SaaS.Accelerator.AdminSite.Controllers;
 public class KnownUsersController : BaseController
 {
     private readonly IKnownUsersRepository knownUsersRepository;
-    private readonly ILogger<OffersController> logger;
+    private readonly SaaSClientLogger<KnownUsersController> logger;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="KnownUsersController" /> class.
@@ -23,7 +25,7 @@ public class KnownUsersController : BaseController
     /// <param name = "knownUsersRepository" > The known users repository.</param>
     /// <param name="logger">The logger.</param>
 
-    public KnownUsersController(IKnownUsersRepository knownUsersRepository, ILogger<OffersController> logger)
+    public KnownUsersController(IKnownUsersRepository knownUsersRepository, SaaSClientLogger<KnownUsersController> logger, IApplicationConfigRepository applicationConfigRepository):base(applicationConfigRepository)
     {
         this.knownUsersRepository = knownUsersRepository;
         this.logger = logger;
@@ -35,7 +37,7 @@ public class KnownUsersController : BaseController
     /// <returns>All known users.</returns>
     public IActionResult Index()
     {
-        this.logger.LogInformation("KnownUsers Controller / Index");
+        this.logger.Info("KnownUsers Controller / Index");
         try
         {
             var getAllKnownUsers = this.knownUsersRepository.GetAllKnownUsers();
@@ -43,7 +45,7 @@ public class KnownUsersController : BaseController
         }
         catch (Exception ex)
         {
-            this.logger.LogError(ex, ex.Message);
+            this.logger.LogError($"Message:{ex.Message} :: {ex.InnerException}");
             return this.View("Error", ex);
         }
     }
@@ -56,15 +58,17 @@ public class KnownUsersController : BaseController
     public JsonResult SaveKnownUsers([FromBody] IEnumerable<KnownUsers> knownUsers)
     {
 
-        this.logger.LogInformation("KnownUsers Controller / SaveKnownUsers");
+        this.logger.Info("KnownUsers Controller / SaveKnownUsers");
         try
         {
             return Json(this.knownUsersRepository.SaveAllKnownUsers(knownUsers));
         }
         catch (Exception ex)
         {
-            this.logger.LogError(ex, ex.Message);
+            this.logger.LogError($"Message:{ex.Message} :: {ex.InnerException}");
             return Json(string.Empty);
         }
     }
+
+
 }

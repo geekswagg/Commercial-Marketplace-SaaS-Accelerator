@@ -5,10 +5,6 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link href="~/css/jquery-ui/jquery-ui.css" rel="stylesheet" />
-    <link href="~/css/jquery-ui/style.css" rel="stylesheet" />
-    <script src="~/lib/jquery-ui/jquery-1.12.4.js"></script>
-    <script src="~/lib/jquery-ui/jquery-ui.js"></script>
 </head>
 <body>
     <style>
@@ -52,10 +48,10 @@
                                             @template.IsActive
                                         </td>
                                         <td>
-                                            <div class="nav-item dropdown">
-                                                <a class="nav-link dropdown cm-link-button" href="#" id="dropdown02" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><i class="fa fa-bars"></i></a>
+                                            <div class="nav-item dropdown minline">
+                                                <a class="nav-link dropdown cm-link-button" href="#" id="dropdown02" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><i class="fa fa-bars"></i></a>
                                                 <div class="dropdown-menu" aria-labelledby="dropdown02">
-                                                    <a class="dropdown-item cm-dropdown-option" data-target="#emailTemplatesModal" onclick="ViewEmailTemplateDetailsByStatus('@template.Status')">Edit</a>
+                                                    <a class="dropdown-item cm-dropdown-option" data-bs-target="#emailTemplatesModal" onclick="ViewEmailTemplateDetailsByStatus('@template.Status')">Edit</a>
                                                 </div>
                                             </div>
                                         </td>
@@ -67,7 +63,7 @@
                     </div>
                     <div class="ac-save-d">
                         <p>
-                            <a class="cm-button-default mt0" id="backButton" asp-area="" asp-controller="ApplicationConfig" asp-action="Index">Back</a>
+                            <a class="cm-button-default mt0" id="backButton" style="text-decoration: none;" asp-area="" asp-controller="ApplicationConfig" asp-action="Index">Back</a>
                         </p>
                     </div>
                 } else {
