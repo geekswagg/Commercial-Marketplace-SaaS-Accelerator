@@ -1,3 +1,10 @@
+---
+
+The SaaS Accelerator is offered under the MIT License as open source software and is <ins>not supported</ins> by Microsoft. <br>
+If you need help with the accelerator or would like to report defects or feature requests, use the Issues feature on this GitHub repository.
+
+---
+
 # Install the Azure Marketplace SaaS Accelerator using Azure Cloud Shell
 
 <!-- no toc -->
@@ -27,12 +34,12 @@ Copy the following section to an editor and update it to match your company pref
 - [Optional] Replace `East US` with a region closest to you.
 
 ``` powershell
-wget https://dotnet.microsoft.com/download/dotnet/scripts/v1/dotnet-install.sh; `
+wget https://dot.net/v1/dotnet-install.sh -O dotnet-install.sh; `
 chmod +x dotnet-install.sh; `
-./dotnet-install.sh -version 6.0.417; `
+./dotnet-install.sh -version 10.0.400; `
 $ENV:PATH="$HOME/.dotnet:$ENV:PATH"; `
-dotnet tool install --global dotnet-ef --version 6.0.1; `
-git clone https://github.com/Azure/Commercial-Marketplace-SaaS-Accelerator.git -b 7.6.2 --depth 1; `
+dotnet tool install --global dotnet-ef --version 10.0.11; `
+git clone https://github.com/Azure/Commercial-Marketplace-SaaS-Accelerator.git -b 10.0.0 --depth 1; `
 cd ./Commercial-Marketplace-SaaS-Accelerator/deployment; `
 .\Deploy.ps1 `
  -WebAppNamePrefix "SOME-UNIQUE-STRING" `
@@ -60,6 +67,7 @@ The script above will perform the following actions.
  -ADMTApplicationID "xxxx-xxx-xxx-xxx-xxxx" `
  -LogoURLpng "https://company_com/company_logo.png" `
  -LogoURLico "https://company_com/company_logo.ico" `
+ -IsAdminPortalMultiTenant "true" `
  -Quiet
  ```
 
@@ -70,13 +78,14 @@ The script above will perform the following actions.
 If you already have deployed the SaaS Accelerator, but you want to update it so that you take advantage of new features developed, you can run the following command:
 
 *you need to ensure that you use the same parameters you used in the initial deployment 
+*if upgrading to an older release, use the .NET SDK and dotnet-ef versions required by that release.
 
 ``` powershell
-wget https://dotnet.microsoft.com/download/dotnet/scripts/v1/dotnet-install.sh; `
+wget https://dot.net/v1/dotnet-install.sh -O dotnet-install.sh; `
 chmod +x dotnet-install.sh; `
-./dotnet-install.sh -version 6.0.417; `
+./dotnet-install.sh -version 10.0.400; `
 $ENV:PATH="$HOME/.dotnet:$ENV:PATH"; `
-dotnet tool install --global dotnet-ef --version 6.0.1; `
+dotnet tool update --global dotnet-ef --version 10.0.11; `
 git clone https://github.com/Azure/Commercial-Marketplace-SaaS-Accelerator.git -b <release-version-branch-to-deploy> --depth 1; `
 cd ./Commercial-Marketplace-SaaS-Accelerator/deployment; `
 .\Upgrade.ps1 `
@@ -100,6 +109,7 @@ cd ./Commercial-Marketplace-SaaS-Accelerator/deployment; `
 | SQLServerName | A unique name of the database server (without database.windows.net). Default: `WebAppNamePrefix`-sql |
 | LogoURLpng | The url of the company logo image in .png format with a size of 96x96 to be used on the website |
 | LogoURLico | The url of the company logo image in .ico format |
+| IsAdminPortalMultiTenant | Set to `true` if you want to enable multi-tenant support for the admin portal. Default: `false` |
 | Quiet | Disable verbose output when running the script
 
 ## Setting up a development environment

@@ -48,7 +48,7 @@ public partial class SaasKitContext : DbContext
     {
         if (!optionsBuilder.IsConfigured)
         {
-
+            optionsBuilder.UseSqlServer(@"Server=(localdb)\mssqllocaldb;Database=Test");
         }
     }
 
